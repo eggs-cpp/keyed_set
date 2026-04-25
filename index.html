@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eggs.KeyedSet</title>
+<link rel="stylesheet" href="css/normalize.css">
+<link rel="stylesheet" href="css/main.css">
+<link rel="icon" href="css/img/favicon.png">
+</head>
+<body>
+<div id="container">
+
+<div id="head">
+  <div class="top">
+    <img class="logo" src="logo.png" alt="" height="48">
+    <a class="name" href="index.html">Eggs.KeyedSet</a>
+    <span class="slogan">— C++23 member-keyed ordered set</span>
+  </div>
+  <div class="bottom">
+    <div class="nav">
+      <a href="index.html"><img src="css/img/home.png" alt="Home"></a>
+      <a href="introduction.html"><img src="css/img/next.png" alt="Next"></a>
+    </div>
+  </div>
+</div>
+
+<div id="main">
+
+<h1 class="title">Eggs.KeyedSet</h1>
+
+<p><strong>Eggs.KeyedSet</strong> is a <strong>C++23</strong> ordered associative
+container that stores unique <code>Value</code> objects indexed by a designated
+member field —see it on <a href="https://github.com/eggs-cpp/keyed_set">Github</a>—.</p>
+
+<h2>Contents</h2>
+<ul>
+  <li><a href="introduction.html">Introduction</a></li>
+  <li><a href="design.html">Design</a></li>
+  <li><a href="reference.html">Reference</a></li>
+</ul>
+
+<h2>Requirements</h2>
+
+<p>The library requires a standard conformant implementation of <strong>C++23</strong>.
+There are no external dependencies.</p>
+
+<p>The library is continuously tested with the following configurations:</p>
+<ul>
+  <li><em>GCC</em> 14</li>
+  <li><em>Clang</em> 18 (libstdc++ and libc++)</li>
+  <li><em>Apple LLVM</em> 16 (Xcode)</li>
+  <li><em>MSVC</em> 2022</li>
+</ul>
+
+<h2>Synopsis</h2>
+
+<pre class="code">namespace eggs {
+
+  template &lt;
+      typename Value,
+      auto     Key,
+      typename Compare   = std::less&lt;<em>key-type</em>&gt;,
+      typename Allocator = std::allocator&lt;Value&gt;
+  &gt;
+  class <a href="reference.html">keyed_set</a>;
+
+} // namespace eggs</pre>
+
+<h2>Quick Example</h2>
+
+<pre class="code">#include &lt;eggs/keyed_set.hpp&gt;
+
+struct Employee { int id; std::string name; };
+
+eggs::keyed_set&lt;Employee, &amp;Employee::id&gt; roster;
+
+roster.insert({101, "Alice"});
+roster.insert({102, "Bob"});
+roster.insert({103, "Carol"});
+
+// Heterogeneous lookup: find by int, no Employee construction required
+if (auto it = roster.find(102); it != roster.end())
+    std::cout &lt;&lt; it-&gt;name &lt;&lt; '\n';  // Bob
+
+// Iteration is in ascending key order
+for (auto const&amp; e : roster)
+    std::cout &lt;&lt; e.id &lt;&lt; ' ' &lt;&lt; e.name &lt;&lt; '\n';
+
+// Custom comparator: descending order
+eggs::keyed_set&lt;Employee, &amp;Employee::id, std::greater&lt;int&gt;&gt; desc;</pre>
+
+</div><!-- #main -->
+
+<div id="foot">
+  <p>Copyright <em>Agust&iacute;n Berg&eacute;</em>, <em>Fusion Fenix</em> 2026</p>
+  <p>Distributed under the <a href="http://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0</a>.</p>
+</div>
+
+</div><!-- #container -->
+</body>
+</html>

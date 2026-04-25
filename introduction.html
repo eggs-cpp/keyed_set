@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction — Eggs.KeyedSet</title>
+<link rel="stylesheet" href="css/normalize.css">
+<link rel="stylesheet" href="css/main.css">
+<link rel="icon" href="css/img/favicon.png">
+</head>
+<body>
+<div id="container">
+
+<div id="head_post">
+  <a class="name" href="index.html">
+    <img class="logo" src="logo.png" alt="" height="32">
+    Eggs.KeyedSet
+  </a>
+  <div class="nav">
+    <a href="index.html"><img src="css/img/prev.png" alt="Prev"></a>
+    <a href="index.html"><img src="css/img/home.png" alt="Home"></a>
+    <a href="design.html"><img src="css/img/next.png" alt="Next"></a>
+  </div>
+</div>
+
+<div id="main">
+
+<h1 class="title">Introduction</h1>
+
+<p>The standard library's <code>std::map&lt;Key, Value&gt;</code> stores
+<code>std::pair&lt;Key const, Value&gt;</code>. The key and value are separate
+objects, which is natural when the key is extrinsic to the value, but wasteful
+and awkward when the key is already a field <em>of</em> the value.</p>
+
+<p>Consider an employee registry keyed by employee ID:</p>
+
+<pre class="code">struct Employee { int id; std::string name; double salary; };
+
+// std::map approach: id appears twice, pair is awkward to work with
+std::map&lt;int, Employee&gt; roster;
+roster.emplace(42, Employee{42, "Alice", 95000.0});  // id duplicated
+
+auto it = roster.find(42);
+it-&gt;second.name;  // must go through .second</pre>
+
+<p><code>std::set&lt;Employee, Cmp&gt;</code> comes closer, but requires a custom
+comparator at the type level and heterogeneous lookup requires additional
+machinery, all written by hand for every type.</p>
+
+<p><strong>Eggs.KeyedSet</strong> automates this pattern. A member pointer
+designates which field is the key; the container handles ordering, heterogeneous
+lookup, and all associative container requirements automatically:</p>
+
+<pre class="code">eggs::keyed_set&lt;Employee, &amp;Employee::id&gt; roster;
+
+roster.insert({42, "Alice", 95000.0});
+
+auto it = roster.find(42);   // lookup by int, no Employee constructed
+it-&gt;name;                    // direct access, no .second</pre>
+
+<h2>Heterogeneous Lookup</h2>
+
+<p><code>keyed_set</code> always supports heterogeneous lookup by
+<code>key_type</code> regardless of the <code>Compare</code> parameter.
+When <code>Compare</code> defines <code>is_transparent</code> —such as
+<code>std::less&lt;&gt;</code>— additional overloads accepting any
+comparable type <code>K</code> are also enabled:</p>
+
+<pre class="code">// Default compare: lookup by key_type always works
+eggs::keyed_set&lt;Employee, &amp;Employee::id&gt; m;
+m.find(42);       // OK: int is key_type
+
+// Transparent compare: lookup by any K comparable to int
+eggs::keyed_set&lt;Employee, &amp;Employee::id, std::less&lt;&gt;&gt; mt;
+mt.find(42L);     // OK: long is comparable to int via std::less&lt;&gt;</pre>
+
+<h2>Ordering and Custom Comparators</h2>
+
+<p>The third template parameter <code>Compare</code> is a strict-weak-ordering
+binary predicate on <code>key_type</code>, exactly as for <code>std::set</code>.
+It defaults to <code>std::less&lt;key_type&gt;</code>:</p>
+
+<pre class="code">// Descending order by id
+eggs::keyed_set&lt;Employee, &amp;Employee::id, std::greater&lt;int&gt;&gt; desc;
+
+// String key with case-insensitive ordering
+struct ILess {
+    using is_transparent = void;
+    bool operator()(std::string const&amp; a, std::string const&amp; b) const;
+};
+eggs::keyed_set&lt;Employee, &amp;Employee::name, ILess&gt; by_name;</pre>
+
+<h2>Allocator Support</h2>
+
+<p>The fourth template parameter <code>Allocator</code> follows the same
+conventions as <code>std::set</code>. It defaults to
+<code>std::allocator&lt;Value&gt;</code>:</p>
+
+<pre class="code">using MyAlloc = std::pmr::polymorphic_allocator&lt;Employee&gt;;
+eggs::keyed_set&lt;Employee, &amp;Employee::id, std::less&lt;int&gt;, MyAlloc&gt; m(resource);</pre>
+
+</div><!-- #main -->
+
+<div id="foot">
+  <p>Copyright <em>Agust&iacute;n Berg&eacute;</em>, <em>Fusion Fenix</em> 2026</p>
+  <p>Distributed under the <a href="http://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0</a>.</p>
+</div>
+
+</div><!-- #container -->
+</body>
+</html>

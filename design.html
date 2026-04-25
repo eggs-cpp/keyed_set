@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design — Eggs.KeyedSet</title>
+<link rel="stylesheet" href="css/normalize.css">
+<link rel="stylesheet" href="css/main.css">
+<link rel="icon" href="css/img/favicon.png">
+</head>
+<body>
+<div id="container">
+
+<div id="head_post">
+  <a class="name" href="index.html">
+    <img class="logo" src="logo.png" alt="" height="32">
+    Eggs.KeyedSet
+  </a>
+  <div class="nav">
+    <a href="introduction.html"><img src="css/img/prev.png" alt="Prev"></a>
+    <a href="index.html"><img src="css/img/home.png" alt="Home"></a>
+    <a href="reference.html"><img src="css/img/next.png" alt="Next"></a>
+  </div>
+</div>
+
+<div id="main">
+
+<h1 class="title">Design</h1>
+
+<h2>Backing Store</h2>
+
+<p><code>keyed_set</code> is implemented as a thin adaptor over
+<code>std::set&lt;Value, value_compare, Allocator&gt;</code>. The internal
+comparator —<code>value_compare</code>— wraps the user-supplied
+<code>Compare</code> via private inheritance for empty-base optimisation, and
+applies it to <code>v.*Key</code> rather than to <code>Value</code> directly.</p>
+
+<h2><code>key_compare</code> vs <code>value_compare</code></h2>
+
+<p><code>keyed_set</code> follows the <code>std::map</code> model:</p>
+<ul>
+  <li><code>key_compare</code> is the user-supplied <code>Compare</code>,
+      operating on <code>key_type</code>. Returned by <code>key_comp()</code>.</li>
+  <li><code>value_compare</code> is the internal projecting adaptor, operating
+      on <code>value_type</code>. Returned by <code>value_comp()</code>.</li>
+</ul>
+
+<h2><code>is_transparent</code> and Heterogeneous Lookup</h2>
+
+<p><code>value_compare</code> always defines <code>is_transparent</code> so
+that <code>std::set</code> activates its heterogeneous tree operations, which
+are required because <code>std::set::key_type</code> is <code>Value</code> while
+our <code>key_type</code> is the projected member type.</p>
+
+<p>The template overloads accepting an arbitrary <code>K</code> are
+conditionally enabled via
+<code>requires requires { typename Compare::is_transparent; }</code> on both
+the comparator and all heterogeneous lookup functions. A non-transparent
+<code>Compare</code> supports only <code>key_type</code> lookups; a transparent
+one supports arbitrary comparable types.</p>
+
+<h2>Non-Type Template Parameter</h2>
+
+<p><code>Key</code> is declared as <code>auto Key</code> rather than
+<code>auto Value::*Key</code>. The latter syntax is not supported by all
+C++23-capable compilers (GCC &lt; 14 rejects it).</p>
+
+<h2><code>from_range</code> and <code>insert_range</code></h2>
+
+<p>These are guarded by <code>__cpp_lib_ranges_to_container</code> and delegate
+to the iterator-range constructor and <code>insert(first, last)</code> rather
+than to <code>std::set</code>'s own <code>from_range</code> constructor, which
+may be absent even when <code>std::from_range_t</code> is defined.</p>
+
+<h2>Why No <code>multi_keyed_set</code></h2>
+
+<p>A <code>multi_keyed_set</code> would allow multiple objects with the same key,
+contradicting the container's fundamental semantic: the key is intrinsic to the
+value, so duplicate keys represent a data integrity error. A grouping by a
+non-unique attribute is a different abstraction and is not provided here.</p>
+
+</div><!-- #main -->
+
+<div id="foot">
+  <p>Copyright <em>Agust&iacute;n Berg&eacute;</em>, <em>Fusion Fenix</em> 2026</p>
+  <p>Distributed under the <a href="http://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0</a>.</p>
+</div>
+
+</div><!-- #container -->
+</body>
+</html>

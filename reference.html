@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference — Eggs.KeyedSet</title>
+<link rel="stylesheet" href="css/normalize.css">
+<link rel="stylesheet" href="css/main.css">
+<link rel="icon" href="css/img/favicon.png">
+</head>
+<body>
+<div id="container">
+
+<div id="head_post">
+  <a class="name" href="index.html">
+    <img class="logo" src="logo.png" alt="" height="32">
+    Eggs.KeyedSet
+  </a>
+  <div class="nav">
+    <a href="design.html"><img src="css/img/prev.png" alt="Prev"></a>
+    <a href="index.html"><img src="css/img/home.png" alt="Home"></a>
+  </div>
+</div>
+
+<div id="main">
+
+<h1 class="title">Reference</h1>
+
+<pre class="code">namespace eggs {
+
+  template &lt;
+      typename Value,
+      auto     Key,
+      typename Compare   = std::less&lt;<em>key-type</em>&gt;,
+      typename Allocator = std::allocator&lt;Value&gt;
+  &gt;
+  class keyed_set;
+
+} // namespace eggs</pre>
+
+<!-- ── keyed_set ──────────────────────────────────────────────────────────── -->
+
+<h2>Class template <code>keyed_set</code></h2>
+
+<p>An ordered associative container satisfying the C++26
+<em>AssociativeContainer</em> requirements that stores unique <code>Value</code>
+objects indexed by a member designated by the non-type template parameter
+<code>Key</code>.</p>
+
+<p><em>Template parameters:</em></p>
+<ul>
+  <li><strong>Value</strong> — the element type.</li>
+  <li><strong>Key</strong> — a pointer-to-member of <code>Value</code>. The
+      pointee type becomes <code>key_type</code>.</li>
+  <li><strong>Compare</strong> — a strict-weak-ordering binary predicate on
+      <code>key_type</code>. Defaults to <code>std::less&lt;key_type&gt;</code>.
+      If <code>Compare::is_transparent</code> is defined, heterogeneous lookup
+      by arbitrary <code>K</code> is enabled.</li>
+  <li><strong>Allocator</strong> — allocator for <code>Value</code>. Defaults
+      to <code>std::allocator&lt;Value&gt;</code>.</li>
+</ul>
+
+<!-- ── Types ─────────────────────────────────────────────────────────────── -->
+
+<h2>Member Types</h2>
+
+<div class="reference">
+<ul>
+  <li>
+    <code>key_type</code>
+    <ul><li>The type of the member pointed to by <code>Key</code>, with cv-qualifiers and references removed.</li></ul>
+  </li>
+  <li>
+    <code>value_type</code>
+    <ul><li><code>Value</code></li></ul>
+  </li>
+  <li>
+    <code>key_compare</code>
+    <ul><li><code>Compare</code> — the user-supplied comparison object, operating on <code>key_type</code>.</li></ul>
+  </li>
+  <li>
+    <code>value_compare</code>
+    <ul><li>An internal projecting adaptor wrapping <code>Compare</code> that compares <code>value_type</code> objects by their projected key. Always defines <code>is_transparent</code>.</li></ul>
+  </li>
+  <li>
+    <code>allocator_type</code>
+    <ul><li><code>Allocator</code></li></ul>
+  </li>
+  <li>
+    <code>iterator</code> / <code>const_iterator</code>
+    <ul><li>A constant bidirectional iterator. Elements may not be mutated through iterators as doing so could corrupt the ordering invariant. <code>iterator</code> and <code>const_iterator</code> are the same type.</li></ul>
+  </li>
+  <li>
+    <code>node_type</code> / <code>insert_return_type</code>
+    <ul><li>Node handle and node insertion result types.</li></ul>
+  </li>
+</ul>
+</div>
+
+<!-- ── Constructors ──────────────────────────────────────────────────────── -->
+
+<h2>Constructors</h2>
+
+<div class="reference">
+<ul>
+  <li>
+    <code>keyed_set()</code>
+    <ul><li>Constructs an empty container using <code>key_compare()</code> as comparison object.</li></ul>
+  </li>
+  <li>
+    <code>explicit keyed_set(key_compare const&amp; c, allocator_type const&amp; a = {})</code>
+    <ul><li>Constructs an empty container using <code>c</code> as comparison object and <code>a</code> as allocator.</li></ul>
+  </li>
+  <li>
+    <code>explicit keyed_set(allocator_type const&amp; a)</code>
+    <ul><li>Constructs an empty container using the given allocator.</li></ul>
+  </li>
+  <li>
+    <code>keyed_set(InputIt first, InputIt last, key_compare const&amp; c = {}, allocator_type const&amp; a = {})</code>
+    <ul><li>Constructs a container from the range <code>[first, last)</code>. Duplicate keys are ignored.</li></ul>
+  </li>
+  <li>
+    <code>keyed_set(std::initializer_list&lt;value_type&gt; il, key_compare const&amp; c = {}, allocator_type const&amp; a = {})</code>
+    <ul><li>Constructs a container from an initializer list. Duplicate keys are ignored.</li></ul>
+  </li>
+  <li>
+    <code>keyed_set(std::from_range_t, R&amp;&amp; rg, key_compare const&amp; c = {}, allocator_type const&amp; a = {})</code>
+    <ul><li>Constructs a container from a <code>container-compatible-range</code>. Available when <code>__cpp_lib_ranges_to_container</code> is defined.</li></ul>
+  </li>
+  <li>
+    <code>keyed_set(keyed_set const&amp;)</code> / <code>keyed_set(keyed_set&amp;&amp;)</code>
+    <ul><li>Copy and move constructors. Allocator-extended forms are also provided.</li></ul>
+  </li>
+</ul>
+</div>
+
+<!-- ── Modifiers ─────────────────────────────────────────────────────────── -->
+
+<h2>Modifiers</h2>
+
+<div class="reference">
+<ul>
+  <li>
+    <code>emplace(Args&amp;&amp;...) -&gt; pair&lt;iterator, bool&gt;</code>
+    <ul><li>Constructs a new element in-place. Returns <code>{position, true}</code> on insertion, <code>{position, false}</code> on duplicate.</li></ul>
+  </li>
+  <li>
+    <code>emplace_hint(const_iterator hint, Args&amp;&amp;...) -&gt; iterator</code>
+    <ul><li>Constructs in-place near <code>hint</code>. A wrong hint is accepted; the result is always correct.</li></ul>
+  </li>
+  <li>
+    <code>insert(value_type const&amp;) -&gt; pair&lt;iterator, bool&gt;</code><br>
+    <code>insert(value_type&amp;&amp;) -&gt; pair&lt;iterator, bool&gt;</code><br>
+    <code>insert(const_iterator hint, value_type)</code><br>
+    <code>insert(InputIt first, InputIt last)</code><br>
+    <code>insert(initializer_list)</code><br>
+    <code>insert(node_type&amp;&amp;) -&gt; insert_return_type</code>
+    <ul><li>Inserts if no element with an equivalent key exists. For node-handle insertion, an unconsumed node handle is returned in the result on duplicate.</li></ul>
+  </li>
+  <li>
+    <code>insert_range(R&amp;&amp; rg)</code>
+    <ul><li>Inserts all elements of <code>rg</code> for which no equivalent key exists. Available when <code>__cpp_lib_ranges_to_container</code> is defined.</li></ul>
+  </li>
+  <li>
+    <code>extract(const_iterator) -&gt; node_type</code><br>
+    <code>extract(key_type const&amp;) -&gt; node_type</code>
+    <ul><li>Removes and returns the element as a node handle without copy or move. Returns an empty handle if not found. All pointers and references to the element remain valid while held in the handle.</li></ul>
+  </li>
+  <li>
+    <code>erase(key_type const&amp;) -&gt; size_type</code><br>
+    <code>erase(const_iterator) -&gt; iterator</code><br>
+    <code>erase(const_iterator first, const_iterator last) -&gt; iterator</code>
+    <ul><li>Removes the designated element(s). Key overloads return the count erased (0 or 1). Iterator overloads return an iterator past the last erased element.</li></ul>
+  </li>
+  <li>
+    <code>clear()</code>
+    <ul><li>Erases all elements. Postcondition: <code>empty()</code>.</li></ul>
+  </li>
+  <li>
+    <code>merge(keyed_set&amp;)</code> / <code>merge(keyed_set&amp;&amp;)</code>
+    <ul><li>Transfers elements from <code>source</code> for which no equivalent key exists. No copy or move of values occurs. All iterators and pointers to transferred elements remain valid.</li></ul>
+  </li>
+</ul>
+</div>
+
+<!-- ── Observers ─────────────────────────────────────────────────────────── -->
+
+<h2>Observers</h2>
+
+<div class="reference">
+<ul>
+  <li>
+    <code>key_comp() -&gt; key_compare</code>
+    <ul><li>Returns the <code>Compare</code> object, operating on <code>key_type</code>.</li></ul>
+  </li>
+  <li>
+    <code>value_comp() -&gt; value_compare</code>
+    <ul><li>Returns the projecting comparator, operating on <code>value_type</code>.</li></ul>
+  </li>
+  <li>
+    <code>get_allocator() -&gt; allocator_type</code>
+    <ul><li>Returns the stored allocator.</li></ul>
+  </li>
+</ul>
+</div>
+
+<!-- ── Lookup ─────────────────────────────────────────────────────────────── -->
+
+<h2>Lookup</h2>
+
+<div class="reference">
+<ul>
+  <li>
+    <code>find(key_type const&amp;) -&gt; const_iterator</code><br>
+    <code>find(K const&amp;) -&gt; const_iterator</code> <em>(requires transparent Compare)</em>
+    <ul><li>Returns an iterator to the element whose key is equivalent to <code>k</code>, or <code>end()</code>. <em>O</em>(log <em>n</em>).</li></ul>
+  </li>
+  <li>
+    <code>count(key_type const&amp;) -&gt; size_type</code><br>
+    <code>count(K const&amp;) -&gt; size_type</code>
+    <ul><li>Returns the number of matching elements (0 or 1).</li></ul>
+  </li>
+  <li>
+    <code>contains(key_type const&amp;) -&gt; bool</code><br>
+    <code>contains(K const&amp;) -&gt; bool</code>
+    <ul><li>Returns <code>true</code> if a matching element exists. Equivalent to <code>find(k) != end()</code>.</li></ul>
+  </li>
+  <li>
+    <code>lower_bound(key_type const&amp;) -&gt; const_iterator</code><br>
+    <code>upper_bound(key_type const&amp;) -&gt; const_iterator</code>
+    <ul><li>Returns an iterator to the first element whose key is not less than / greater than <code>k</code>, or <code>end()</code>. Transparent overloads available when <code>Compare::is_transparent</code> is defined.</li></ul>
+  </li>
+  <li>
+    <code>equal_range(key_type const&amp;) -&gt; pair&lt;const_iterator, const_iterator&gt;</code>
+    <ul><li>Returns <code>{lower_bound(k), upper_bound(k)}</code>. Since keys are unique the range contains at most one element. Transparent overload available.</li></ul>
+  </li>
+</ul>
+</div>
+
+<!-- ── Swap / Comparison ──────────────────────────────────────────────────── -->
+
+<h2>Swap</h2>
+
+<div class="reference">
+<ul>
+  <li>
+    <code>swap(keyed_set&amp;)</code> / <code>swap(keyed_set&amp;, keyed_set&amp;)</code>
+    <ul><li>Exchanges the contents. All iterators, pointers, and references remain valid and refer to the same elements in the swapped container.</li></ul>
+  </li>
+</ul>
+</div>
+
+<h2>Comparison</h2>
+
+<div class="reference">
+<ul>
+  <li>
+    <code>operator==(keyed_set const&amp;, keyed_set const&amp;) -&gt; bool</code>
+    <ul><li>Returns <code>true</code> if both containers have equal size and all corresponding elements compare equal under <code>key_type::operator==</code>.</li></ul>
+  </li>
+  <li>
+    <code>operator&lt;=&gt;(keyed_set const&amp;, keyed_set const&amp;)</code>
+    <ul><li>Lexicographic three-way comparison over key projections. Synthesises <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>.</li></ul>
+  </li>
+</ul>
+</div>
+
+</div><!-- #main -->
+
+<div id="foot">
+  <p>Copyright <em>Agust&iacute;n Berg&eacute;</em>, <em>Fusion Fenix</em> 2026</p>
+  <p>Distributed under the <a href="http://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0</a>.</p>
+</div>
+
+</div><!-- #container -->
+</body>
+</html>
