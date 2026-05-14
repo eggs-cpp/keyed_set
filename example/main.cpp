@@ -1,15 +1,15 @@
-// Copyright Agustin K-ballo Berge, Fusion Fenix 2026
+// Copyright Agustin K-ballo Berge, Fusion Fenix 2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <eggs/flat_keyed_set.hpp>
 #include <eggs/keyed_set.hpp>
 
 #include <cassert>
 #include <iostream>
 #include <ranges>
 #include <string>
-#include <vector>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Domain types
@@ -75,6 +75,7 @@ int main()
 #ifdef __cpp_lib_ranges_to_container
     // ── from_range constructor ───────────────────────────────────────────────
     {
+        // Build from a filtered view — no temporary container required
         std::vector<Employee> all{
             {1, "Dave",  70'000.0},
             {2, "Eve",   90'000.0},
@@ -93,28 +94,6 @@ int main()
     }
 #endif
 
-    // ── Iterator-range constructor ───────────────────────────────────────────
-    {
-        std::vector<Employee> all{
-            {1, "Dave",  70'000.0},
-            {2, "Eve",   90'000.0},
-            {3, "Frank", 60'000.0},
-            {4, "Grace", 95'000.0},
-        };
-
-        // Filter into a temporary vector first (compatible with all C++23 compilers)
-        std::vector<Employee> filtered;
-        for (auto const& e : all)
-            if (e.salary >= 90'000.0)
-                filtered.push_back(e);
-
-        eggs::keyed_set<Employee, &Employee::id> top(filtered.begin(), filtered.end());
-
-        assert(top.size() == 2);
-        assert(top.contains(2));
-        assert(top.contains(4));
-    }
-
     // ── Node extraction and re-insertion ────────────────────────────────────
     {
         eggs::keyed_set<Employee, &Employee::id> src{{10, "Heidi", 75'000.0}};
@@ -132,10 +111,8 @@ int main()
     // ── merge ────────────────────────────────────────────────────────────────
     {
         eggs::keyed_set<Employee, &Employee::id> team_a{{1, "Ivan",  80'000.0}};
-        eggs::keyed_set<Employee, &Employee::id> team_b{
-            {2, "Judy",     85'000.0},
-            {1, "Conflict",  0.0}
-        };
+        eggs::keyed_set<Employee, &Employee::id> team_b{{2, "Judy",  85'000.0},
+                                                        {1, "Conflict", 0.0}};
 
         team_a.merge(team_b);
 
@@ -144,22 +121,31 @@ int main()
         assert(team_b.size() == 1 && team_b.contains(1));
     }
 
-    // ── Custom comparator: descending order ──────────────────────────────────
+
+#ifdef __cpp_lib_flat_set
+    // ── flat_keyed_set — contiguous storage, random-access iteration ─────────
     {
-        eggs::keyed_set<Employee, &Employee::id, std::greater<int>> desc;
+        eggs::flat_keyed_set<Employee, &Employee::id> flat;
 
-        desc.insert({1, "Alice",  95'000.0});
-        desc.insert({2, "Bob",    80'000.0});
-        desc.insert({3, "Carol", 110'000.0});
+        flat.insert({3, "Carol", 110'000.0});
+        flat.insert({1, "Alice",  95'000.0});
+        flat.insert({2, "Bob",    80'000.0});
 
-        // Iteration is in descending key order
-        std::cout << "Roster (descending id):\n";
-        for (auto const& e : desc)
-            std::cout << "  " << e.id << "  " << e.name << '\n';
+        // Random-access iteration: pointer arithmetic works
+        auto begin = flat.begin();
+        assert((begin + 2)->id == 3);
 
-        assert(desc.find(2)->name == "Bob");
-        assert(desc.key_comp()(3, 2));  // 3 > 2
+        // keys() gives direct access to the underlying sorted vector
+        auto const& keys = flat.keys();
+        assert(keys[0].id == 1);
+        assert(keys[1].id == 2);
+        assert(keys[2].id == 3);
+
+        // extract_sequence / replace_sequence
+        auto cont = std::move(flat).extract_sequence();
+        assert(cont.size() == 3);
     }
+#endif
 
     std::cout << "All assertions passed.\n";
 }

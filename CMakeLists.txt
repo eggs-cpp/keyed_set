@@ -11,26 +11,20 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# Options (two spellings: short when top-level, prefixed when a subdirectory)
+# Options — prefixed names are always available; when top-level the plain
+# names are also declared (defaulting ON) and aliased into the prefixed ones.
 if(PROJECT_IS_TOP_LEVEL)
-    include(CTest)  # option(BUILD_TESTING ...)
-    option(BUILD_EXAMPLE "Build the example" ON)
+    include(CTest)  # declares BUILD_TESTING, defaults ON
+    option(BUILD_EXAMPLE  "Build the example"             ON)
     option(ENABLE_INSTALL "Enable installing the library" ON)
-else()
-    option(EGGS_KEYED_SET_BUILD_TESTING "Build the testing tree" OFF)
-    option(EGGS_KEYED_SET_BUILD_EXAMPLE "Build the example" OFF)
-    option(EGGS_KEYED_SET_ENABLE_INSTALL "Enable installing the library" OFF)
 
-    # Map prefixed options back to the canonical names used below
-    if(EGGS_KEYED_SET_BUILD_TESTING)
-        set(BUILD_TESTING ON)
-    endif()
-    if(EGGS_KEYED_SET_BUILD_EXAMPLE)
-        set(BUILD_EXAMPLE ON)
-    endif()
-    if(EGGS_KEYED_SET_ENABLE_INSTALL)
-        set(ENABLE_INSTALL ON)
-    endif()
+    set(EGGS_KEYED_SET_BUILD_TESTING  "${BUILD_TESTING}")
+    set(EGGS_KEYED_SET_BUILD_EXAMPLE  "${BUILD_EXAMPLE}")
+    set(EGGS_KEYED_SET_ENABLE_INSTALL "${ENABLE_INSTALL}")
+else()
+    option(EGGS_KEYED_SET_BUILD_TESTING  "Build the testing tree"             OFF)
+    option(EGGS_KEYED_SET_BUILD_EXAMPLE  "Build the example"                  OFF)
+    option(EGGS_KEYED_SET_ENABLE_INSTALL "Enable installing the library"      OFF)
 endif()
 
 # Library target (header-only INTERFACE library)
@@ -42,27 +36,31 @@ target_compile_features(_eggs_keyed_set INTERFACE cxx_std_23)
 target_sources(_eggs_keyed_set INTERFACE
     FILE_SET HEADERS
     BASE_DIRS include
-    FILES include/eggs/keyed_set.hpp)
+    FILES
+        include/eggs/detail/comparator.hpp
+        include/eggs/detail/member_key_type.hpp
+        include/eggs/flat_keyed_set.hpp
+        include/eggs/keyed_set.hpp)
 set_target_properties(_eggs_keyed_set
     PROPERTIES
         EXPORT_NAME Eggs::KeyedSet
-        VERIFY_INTERFACE_HEADER_SETS ${BUILD_TESTING})
+        VERIFY_INTERFACE_HEADER_SETS ${EGGS_KEYED_SET_BUILD_TESTING})
 
 add_library(Eggs::KeyedSet ALIAS _eggs_keyed_set)
 
 # Example
-if(BUILD_EXAMPLE)
+if(EGGS_KEYED_SET_BUILD_EXAMPLE)
     add_subdirectory(example)
 endif()
 
 # Test
-if(BUILD_TESTING)
+if(EGGS_KEYED_SET_BUILD_TESTING)
     enable_testing()
     add_subdirectory(test)
 endif()
 
 # Install
-if(ENABLE_INSTALL)
+if(EGGS_KEYED_SET_ENABLE_INSTALL)
     include(GNUInstallDirs)
     include(CMakePackageConfigHelpers)
 

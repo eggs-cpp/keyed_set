@@ -1,0 +1,97 @@
+// Copyright Agustin K-ballo Berge, Fusion Fenix 2026
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#include <eggs/keyed_set.hpp>
+
+#ifdef __cpp_lib_flat_set
+#include <catch.hpp>
+
+#include "../fixture.hpp"
+
+#include <iterator>
+
+using M = eggs::flat_keyed_set<test::Employee, &test::Employee::id>;
+
+TEST_CASE("equal_range — present key, range of one", "[flat_keyed_set.lookup]")
+{
+    M m{{1, "A"}, {2, "B"}, {3, "C"}};
+    auto [lo, hi] = m.equal_range(2);
+    REQUIRE(lo != m.end());
+    CHECK(lo->id == 2);
+    CHECK(std::distance(lo, hi) == 1);
+}
+
+TEST_CASE("equal_range — absent key between elements, empty range", "[flat_keyed_set.lookup]")
+{
+    M m{{1, "A"}, {3, "C"}};
+    auto [lo, hi] = m.equal_range(2);
+    CHECK(lo == hi);
+    REQUIRE(lo != m.end());
+    CHECK(lo->id == 3);
+}
+
+TEST_CASE("equal_range — empty container returns [end, end)", "[flat_keyed_set.lookup]")
+{
+    M m;
+    auto [lo, hi] = m.equal_range(42);
+    CHECK(lo == m.end());
+    CHECK(hi == m.end());
+}
+
+TEST_CASE("equal_range — key below all elements returns [begin, begin)", "[flat_keyed_set.lookup]")
+{
+    M m{{5, "E"}, {10, "J"}, {15, "O"}};
+    auto [lo, hi] = m.equal_range(1);
+    CHECK(lo == hi);
+    CHECK(lo == m.begin());
+}
+
+TEST_CASE("equal_range — key above all elements returns [end, end)", "[flat_keyed_set.lookup]")
+{
+    M m{{5, "E"}, {10, "J"}, {15, "O"}};
+    auto [lo, hi] = m.equal_range(99);
+    CHECK(lo == m.end());
+    CHECK(hi == m.end());
+}
+
+TEST_CASE("equal_range — first element", "[flat_keyed_set.lookup]")
+{
+    M m{{1, "A"}, {2, "B"}, {3, "C"}};
+    auto [lo, hi] = m.equal_range(1);
+    REQUIRE(lo != m.end());
+    CHECK(lo == m.begin());
+    CHECK(std::distance(lo, hi) == 1);
+}
+
+TEST_CASE("equal_range — last element", "[flat_keyed_set.lookup]")
+{
+    M m{{1, "A"}, {2, "B"}, {3, "C"}};
+    auto [lo, hi] = m.equal_range(3);
+    REQUIRE(lo != m.end());
+    CHECK(lo->id == 3);
+    CHECK(hi == m.end());
+}
+
+TEST_CASE("equal_range(K const&) — transparent overload", "[flat_keyed_set.lookup]")
+{
+    M m{{5, "E"}, {10, "J"}};
+    auto [lo, hi] = m.equal_range(static_cast<long>(5));
+    REQUIRE(lo != m.end());
+    CHECK(lo->id == 5);
+    CHECK(std::distance(lo, hi) == 1);
+}
+
+TEST_CASE("equal_range — consistent with lower_bound and upper_bound", "[flat_keyed_set.lookup]")
+{
+    M m{{1, "A"}, {2, "B"}, {3, "C"}, {4, "D"}, {5, "E"}};
+    for (int k : {0, 1, 2, 3, 4, 5, 6})
+    {
+        auto [lo, hi] = m.equal_range(k);
+        CHECK(lo == m.lower_bound(k));
+        CHECK(hi == m.upper_bound(k));
+    }
+}
+
+#endif // __cpp_lib_flat_set

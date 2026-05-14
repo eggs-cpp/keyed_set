@@ -27,7 +27,6 @@ namespace test
     };
 
     ///////////////////////////////////////////////////////////////////////////
-    //! A type whose key member has a non-trivial type, for broader coverage.
     struct Widget
     {
         std::string code;
@@ -38,14 +37,10 @@ namespace test
     };
 
     ///////////////////////////////////////////////////////////////////////////
-    //! Transparent lookup key: a type convertible-from but not equal-to int,
-    //! used to exercise heterogeneous lookup paths.
     struct EmployeeId
     {
         int value;
-
         explicit EmployeeId(int v) : value(v) {}
-
         friend bool operator<(EmployeeId const& a, int b)               { return a.value < b; }
         friend bool operator<(int a,               EmployeeId const& b) { return a < b.value; }
         friend bool operator<(EmployeeId const& a, EmployeeId const& b) { return a.value < b.value; }
