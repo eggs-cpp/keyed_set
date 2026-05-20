@@ -42,7 +42,13 @@ target_compile_features(_eggs_keyed_set INTERFACE cxx_std_23)
 target_sources(_eggs_keyed_set INTERFACE
     FILE_SET HEADERS
     BASE_DIRS include
-    FILES include/eggs/keyed_set.hpp)
+    FILES
+        include/eggs/detail/comparator.hpp
+        include/eggs/detail/hasher.hpp
+        include/eggs/detail/key_equal.hpp
+        include/eggs/detail/member_key_type.hpp
+        include/eggs/keyed_set.hpp
+        include/eggs/unordered_keyed_set.hpp)
 set_target_properties(_eggs_keyed_set
     PROPERTIES
         EXPORT_NAME Eggs::KeyedSet
