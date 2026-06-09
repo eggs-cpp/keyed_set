@@ -91,6 +91,10 @@ objects indexed by a member designated by the non-type template parameter
     <ul><li>A constant bidirectional iterator. Elements may not be mutated through iterators as doing so could corrupt the ordering invariant. <code>iterator</code> and <code>const_iterator</code> are the same type.</li></ul>
   </li>
   <li>
+    <code>reverse_iterator</code> / <code>const_reverse_iterator</code>
+    <ul><li>A constant bidirectional reverse iterator. Same constness rule as <code>iterator</code>.</li></ul>
+  </li>
+  <li>
     <code>node_type</code> / <code>insert_return_type</code>
     <ul><li>Node handle and node insertion result types.</li></ul>
   </li>
@@ -130,6 +134,62 @@ objects indexed by a member designated by the non-type template parameter
   <li>
     <code>keyed_set(keyed_set const&amp;)</code> / <code>keyed_set(keyed_set&amp;&amp;)</code>
     <ul><li>Copy and move constructors. Allocator-extended forms are also provided.</li></ul>
+  </li>
+</ul>
+</div>
+
+<!-- ── Assignment ────────────────────────────────────────────────────────── -->
+
+<h2>Assignment</h2>
+
+<div class="reference">
+<ul>
+  <li>
+    <code>operator=(keyed_set const&amp;) -&gt; keyed_set&amp;</code><br>
+    <code>operator=(keyed_set&amp;&amp;) noexcept -&gt; keyed_set&amp;</code>
+    <ul><li>Copy and move assignment.</li></ul>
+  </li>
+  <li>
+    <code>operator=(std::initializer_list&lt;value_type&gt;) -&gt; keyed_set&amp;</code>
+    <ul><li>Replaces the container contents with those of the initializer list. Duplicate keys are ignored.</li></ul>
+  </li>
+</ul>
+</div>
+
+<!-- ── Iterators ─────────────────────────────────────────────────────────── -->
+
+<h2>Iterators</h2>
+
+<div class="reference">
+<ul>
+  <li>
+    <code>begin()</code> / <code>end()</code> / <code>cbegin()</code> / <code>cend()</code> <code>-&gt; const_iterator</code>
+    <ul><li>Forward iteration over elements in ascending key order. All overloads return <code>const_iterator</code> since elements may not be mutated in place.</li></ul>
+  </li>
+  <li>
+    <code>rbegin()</code> / <code>rend()</code> / <code>crbegin()</code> / <code>crend()</code> <code>-&gt; const_reverse_iterator</code>
+    <ul><li>Reverse iteration in descending key order.</li></ul>
+  </li>
+</ul>
+</div>
+
+<!-- ── Capacity ───────────────────────────────────────────────────────────── -->
+
+<h2>Capacity</h2>
+
+<div class="reference">
+<ul>
+  <li>
+    <code>[[nodiscard]] empty() -&gt; bool</code>
+    <ul><li>Returns <code>true</code> if the container contains no elements.</li></ul>
+  </li>
+  <li>
+    <code>size() -&gt; size_type</code>
+    <ul><li>Returns the number of elements.</li></ul>
+  </li>
+  <li>
+    <code>max_size() -&gt; size_type</code>
+    <ul><li>Returns the maximum number of elements the container can hold.</li></ul>
   </li>
 </ul>
 </div>
@@ -256,11 +316,11 @@ objects indexed by a member designated by the non-type template parameter
 <ul>
   <li>
     <code>operator==(keyed_set const&amp;, keyed_set const&amp;) -&gt; bool</code>
-    <ul><li>Returns <code>true</code> if both containers have equal size and all corresponding elements compare equal under <code>key_type::operator==</code>.</li></ul>
+    <ul><li>Returns <code>true</code> if both containers have equal size and all corresponding elements compare equal under <code>value_type::operator==</code>.</li></ul>
   </li>
   <li>
     <code>operator&lt;=&gt;(keyed_set const&amp;, keyed_set const&amp;)</code>
-    <ul><li>Lexicographic three-way comparison over key projections. Synthesises <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>.</li></ul>
+    <ul><li>Lexicographic three-way comparison using <code>value_type::operator&lt;=&gt;</code>. Synthesises <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>.</li></ul>
   </li>
 </ul>
 </div>
